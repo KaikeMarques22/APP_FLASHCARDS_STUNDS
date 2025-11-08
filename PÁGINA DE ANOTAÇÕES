@@ -1,0 +1,99 @@
+class NotesHomePage extends StatefulWidget {
+  const NotesHomePage({super.key});
+
+  @override
+  State<NotesHomePage> createState() => _NotesHomePageState();
+}
+
+class _NotesHomePageState extends State<NotesHomePage> {
+  final List<Map<String, String>> _notes = [];
+
+  void _addNote() async {
+    final newNote = await Navigator.push<Map<String, String>>(
+      context,
+      MaterialPageRoute(builder: (context) => const NoteEditor()),
+    );
+
+    if (newNote != null) {
+      setState(() {
+        _notes.add(newNote);
+      });
+    }
+  }
+
+  void _editNote(int index) async {
+    final editedNote = await Navigator.push<Map<String, String>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NoteEditor(
+          initialTitle: _notes[index]['title']!,
+          initialContent: _notes[index]['content']!,
+        ),
+      ),
+    );
+
+    if (editedNote != null) {
+      setState(() {
+        _notes[index] = editedNote;
+      });
+    }
+  }
+
+  void _deleteNote(int index) {
+    setState(() {
+      _notes.removeAt(index);
+    });
+  }
+
+  void _logout() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Minhas Anotações'),
+        actions: [
+          IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
+        ],
+      ),
+      body: _notes.isEmpty
+          ? const Center(
+              child: Text('Nenhuma anotação. Toque em + para adicionar.'),
+            )
+          : ListView.builder(
+              itemCount: _notes.length,
+              itemBuilder: (context, index) {
+                final note = _notes[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  child: ListTile(
+                    title: Text(note['title'] ?? 'Sem título'),
+                    subtitle: Text(
+                      note['content'] ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onTap: () => _editNote(index),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _deleteNote(index),
+                    ),
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addNote,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
